@@ -4,7 +4,6 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferStrategy;
-import java.awt.image.BufferedImage;
 public class LifeGame extends Canvas {
 	private byte[][] cells; 
 	private long tick;
@@ -12,10 +11,9 @@ public class LifeGame extends Canvas {
 	private boolean running = false;
 	private Thread t;
 	private Buttons btn;
-
 	private BufferStrategy bf;
 	LifeGame() {
-		
+		bf = getBufferStrategy();
 		init();
 		setSize(1000+size,1000+size);
 		setBackground(Color.WHITE);
@@ -85,10 +83,11 @@ public class LifeGame extends Canvas {
 		t.start();
 		
 	}
-	public void paint() {		
-	//	System.out.println(""+getHeight()+" "+getWidth());
-		bf = this.getBufferStrategy();
-		Graphics g = null;
+	public void paint(Graphics g) {
+		createBufferStrategy(2);
+		
+		bf = getBufferStrategy();
+		g = null;
 		try{
 			g = bf.getDrawGraphics();
 			render(g);
@@ -106,15 +105,12 @@ public class LifeGame extends Canvas {
 				if(cells[x][y] ==1){
 					g.setColor(Color.BLACK);
 					g.fillRect(x*(getWidth()/size), y*(getHeight()/size),getWidth()/size ,getWidth()/size);
-			//		System.out.println("Filled Square at "+x+","+y);
+				//	System.out.println("Filled Square at "+x+","+y);
 				}
 				g.setColor(Color.GRAY);
 				g.drawRect(x*(getWidth()/size), y*(getHeight()/size),getWidth()/size ,getWidth()/size);
 			}
 		}
-	}
-	public void update(Graphics g) {
-		paint(g);
 	}
 	public void init() {
 		cells = new byte[size][size];
