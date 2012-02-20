@@ -84,7 +84,7 @@ public class LifeGame extends Canvas {
 		
 	}
 	public void paint(Graphics g) {
-		createBufferStrategy(2);
+		createBufferStrategy(1);
 		
 		bf = getBufferStrategy();
 		g = null;
