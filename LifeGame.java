@@ -1,88 +1,59 @@
 import java.io.*;
 import java.util.Scanner;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.awt.image.BufferStrategy;
+
+import javax.swing.Timer;
+/**
+ * @author Jonathan
+ *
+ */
 public class LifeGame extends Canvas {
-	private byte[][] cells; 
+	private byte[][] cells, newCells; 
+	
 	private long tick;
-	private int size = 50;
-	private boolean running = false;
-	private Thread t;
-	private Buttons btn;
+	private int size = 100;
+	private Timer t;
 	private BufferStrategy bf;
-	LifeGame() {
+	private GUI g;
+	/**
+	 * A new game of life, 
+	 * @param g the GUI object that holds this frame and the buttons
+	 */
+	LifeGame(final GUI g) {
+	    this.g = g;
 		bf = getBufferStrategy();
-		init();
 		setSize(1000+size,1000+size);
 		setBackground(Color.WHITE);
-		addMouseListener(new MouseListener() {
-			
-			@Override
-			public void mouseReleased(MouseEvent arg0) {
-				// TODO Auto-generated method stub
-				
-			}
-			
-			@Override
-			public void mousePressed(MouseEvent arg0) {
-				// TODO Auto-generated method stub
-				
-			}
-			
-			@Override
-			public void mouseExited(MouseEvent arg0) {
-				// TODO Auto-generated method stub
-				
-			}
-			
-			@Override
-			public void mouseEntered(MouseEvent arg0) {
-				// TODO Auto-generated method stub
-				
-			}
-			
+		addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				// TODO Auto-generated method stub
 				int x = e.getX()/(getWidth()/size);
 				int y = e.getY()/(getHeight()/size);
-				System.out.println("Marking cell at: x="+x+" y="+y);
-				if(cells[x][y] == 0) {
-					cells[x][y] = 1;
-				} else {
-					cells[x][y] = 0;
-				}
+				
+				cells[x][y] = (byte) (~cells[x][y] & 1);
+				System.out.println("Marking cell at: x="+x+" y="+y+" as "+cells[x][y]);
 				repaint();
 			}
 		});
-		t = new Thread(new Runnable() {
-			
-			@Override
-			public void run() {
-				// TODO Auto-generated method stub
-				while(true) {
-					try {
-						Thread.sleep(250);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					if(running) {
-						tick();
-						try{
-							btn.setTick();
-						} catch (NullPointerException e) {
-							// TODO: handle exception
-						}
-					}
-				}
-			}
-		});
-		t.start();
+		t = new Timer(500,new ActionListener() {
+            
+            @Override
+            public void actionPerformed(ActionEvent arg0) {
+                tick();
+                g.btns.setTick();
+            }
+        });
 		
 	}
+	/* (non-Javadoc)
+	 * @see java.awt.Canvas#paint(java.awt.Graphics)
+	 */
 	public void paint(Graphics g) {
 		createBufferStrategy(1);
 		
@@ -99,35 +70,41 @@ public class LifeGame extends Canvas {
 		
 	}
 	
+	/**
+	 * Render the cells in the frame with a neat border around each cell
+	 * @param g
+	 */
 	private void render(Graphics g) {
 		for(int x = 0; x < cells.length; x++ ) {
 			for (int y = 0; y < cells[x].length; y++) {
 				if(cells[x][y] ==1){
 					g.setColor(Color.BLACK);
 					g.fillRect(x*(getWidth()/size), y*(getHeight()/size),getWidth()/size ,getWidth()/size);
-				//	System.out.println("Filled Square at "+x+","+y);
 				}
 				g.setColor(Color.GRAY);
 				g.drawRect(x*(getWidth()/size), y*(getHeight()/size),getWidth()/size ,getWidth()/size);
 			}
 		}
 	}
+	/**
+	 * Resets the game board
+	 */
 	public void init() {
 		cells = new byte[size][size];
-		//Arrays.fill(cells,new byte[size]);
+		// Set all cells to 0 (dead)
 		for (int i = 0; i < cells.length; i++) {
 			for (int j = 0; j < cells[i].length; j++) {
 				cells[i][j] = 0;
 			}
 		}
 		tick = 0;
-		try{
-			btn.setTick();
-		} catch (NullPointerException e) {
-			// TODO: handle exception
-		}
+		g.btns.setTick();
 		repaint();
 	}
+	/**
+	 * Takes in the board.dat file and uses it to fill the board
+	 * @throws FileNotFoundException
+	 */
 	public void importBoard() throws FileNotFoundException {
 		init();
 		Scanner in = new Scanner(new File("board.dat"));
@@ -136,9 +113,17 @@ public class LifeGame extends Canvas {
 		}
 		in.close();
 	}
+	/**
+	 * Returns the number of ticks that have passed in the simulation
+	 * @return
+	 */
 	public long getTicks() {
 		return tick;
 	}
+	/**
+	 * Exports the current board to the file board.dat for later use.
+	 * @throws IOException
+	 */
 	public void exportBoard() throws IOException {
 		// Save the board to a file as x y
 		BufferedWriter out = new BufferedWriter(new FileWriter("board.dat"));
@@ -151,24 +136,27 @@ public class LifeGame extends Canvas {
 		}
 		out.close();
 	}
-	public void start(Buttons btn) {
-		// Should probably return a message to the GUI
-		this.btn = btn;
-		running = true;
-	/*	synchronized (t) {
-			t.notify();
-		}*/
+	/**
+	 * Starts the simulation
+	 */
+	public void start() {
+		t.start();
 		
 	}
+	/**
+	 * Stops the simulation
+	 */
 	public void stop() {
-		running = false;
-		/*synchronized (t) {
-			t.notify();
-		}*/
+		t.stop();
+		
 	}
+	/**
+	 * Progresses the simulation one step forward. Uses the 8 neighbours around each cell 
+	 * to calculate if a given cell lives, dies or is born.
+	 */
 	private void tick() {
 		tick++;
-		byte[][] newCells = new byte[size][size];
+		newCells = new byte[size][size];
 		int totalSum = 0;
 		// The array should wrap around so that cells[1000][1001] refers to the top right cell
 		for (int i = 0; i < cells.length; i++) {
@@ -215,8 +203,6 @@ public class LifeGame extends Canvas {
 		if(totalSum == 0) {
 			// Should probably stop now, since everyone is dead
 			System.out.println("All cells are dead, stopping!");
-			btn.stopStart.setText("Stopped");
-			btn.stopStart.setSelected(false);
 			stop();
 		}
 		cells = newCells;

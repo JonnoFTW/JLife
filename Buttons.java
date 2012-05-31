@@ -11,30 +11,35 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
 
+/**
+ * @author Jonathan
+ *
+ */
 public class Buttons extends  JPanel  {
 
-	/**
-	 * @param args
-	 */
-	private LifeGame life;
+
+	private GUI g;
 	public JToggleButton stopStart;
 	private JLabel tickCount;
 	
-	Buttons(final LifeGame life) {
-		this.life = life;
+	/**
+	 * The buttons that go at the top of the gui
+	 * @param g
+	 */
+	Buttons(final GUI g) {
+	    this.g = g;
 		this.setSize(300, 50);
 		stopStart = new JToggleButton("Start",false);
-		final Buttons t = this;
 		stopStart.addItemListener(new ItemListener() {
 			@Override
 			public void itemStateChanged(ItemEvent ev) {
 				// TODO Auto-generated method stub
 				if(ev.getStateChange()== ItemEvent.SELECTED){
 					stopStart.setText("Running");
-					life.start(t);
+					g.life.start();
 				} else if(ev.getStateChange() == ItemEvent.DESELECTED) {
 					stopStart.setText("Stopped");
-					life.stop();
+					g.life.stop();
 				}
 				
 			}
@@ -46,7 +51,7 @@ public class Buttons extends  JPanel  {
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
 				try {
-					life.exportBoard();
+					g.life.exportBoard();
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -61,7 +66,7 @@ public class Buttons extends  JPanel  {
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
 				try {
-					life.importBoard();
+					g.life.importBoard();
 				} catch (FileNotFoundException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -73,12 +78,11 @@ public class Buttons extends  JPanel  {
 			
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				// TODO Auto-generated method stub
-				life.init();
+				g.life.init();
 				repaint();
 			}
 		});
-		tickCount = new JLabel("Tick:"+life.getTicks());
+		tickCount = new JLabel("Tick:"+g.life.getTicks());
 		add(stopStart);
 		add(imp);
 		add(reset);
@@ -86,7 +90,10 @@ public class Buttons extends  JPanel  {
 		add(imp);
 		add(tickCount);
 	}
+	/**
+	 * Sets the tick count on the ticket label
+	 */
 	public void setTick() {
-		tickCount.setText("Tick:"+life.getTicks());
+		tickCount.setText("Tick:"+g.life.getTicks());
 	}
 }
