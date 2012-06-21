@@ -1,0 +1,4 @@
+Made this for revision for my Interactive Computer Systems topic.
+
+This is a simple implementation of Conway's Game of Life. Click the squares to add/remove cells. The buttons are
+ self explanatory. Saving and loading only works with one game at the moment.
